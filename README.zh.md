@@ -100,6 +100,17 @@ DB-GPT 不只是一个助手界面，它同时也是一个平台，用于构建 
 - 将 **代码、SQL、检索和工具调用** 组合成完整的 agentic 分析流程
 - 构建面向团队或产品的下一代 **AI + Data 智能助手**
 
+## 本分支二次开发案例：青圃智析
+
+本工作区包含一个基于 DB-GPT ChatDB 的固定 SQLite 可信问数案例，新增领域语义目录、AST 只读 SQL 治理、受控执行、冻结结果评测和可审计证据包。该案例是本分支的二次开发展示，不代表 DB-GPT 上游已经提供同等的通用安全能力。
+
+- [项目说明](projects/qingpu_chatdb/README.md)
+- [技术文档](docs/qingpu-chatdb/architecture.md)
+- [招聘版材料](docs/qingpu-chatdb/recruiting/project-brief.md)
+- [验收证据](projects/qingpu_chatdb/evidence/README.md)
+
+当前自动验收不调用 LLM，且仅验证 SQLite 方言；量化结果和边界以 evidence manifest 为准。
+
 ## 产品工作流
 
 ### 数据探索

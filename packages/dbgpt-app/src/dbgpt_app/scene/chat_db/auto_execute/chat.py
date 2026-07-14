@@ -1,17 +1,34 @@
 import logging
+from pathlib import Path
 from typing import Dict, Type
 
 from dbgpt import SystemApp
 from dbgpt.agent.util.api_call import ApiCall
-from dbgpt.util.executor_utils import blocking_func_to_async
+from dbgpt.configs.model_config import ROOT_PATH
 from dbgpt.util.tracer import root_tracer, trace
 from dbgpt_app.scene import BaseChat, ChatScene
 from dbgpt_app.scene.base_chat import ChatParam
 from dbgpt_app.scene.chat_db.auto_execute.config import ChatWithDBExecuteConfig
+from dbgpt_app.scene.chat_db.safe_sql import ReadOnlySqlGuard, SafeSqlExecutor
+from dbgpt_app.scene.chat_db.semantic_catalog import SemanticCatalog
 from dbgpt_serve.core.config import GPTsAppCommonConfig
 from dbgpt_serve.datasource.manages import ConnectorManager
 
 logger = logging.getLogger(__name__)
+
+
+def _resolve_catalog_path(catalog_path: str | None) -> Path:
+    if not catalog_path:
+        raise ValueError(
+            "chat_with_db_execute requires app.configs.catalog_path for governed SQL"
+        )
+    path = Path(catalog_path).expanduser()
+    if not path.is_absolute():
+        path = Path(ROOT_PATH) / path
+    path = path.resolve()
+    if not path.is_file():
+        raise ValueError("Semantic catalog file does not exist")
+    return path
 
 
 class ChatWithDbAutoExecute(BaseChat):
@@ -44,49 +61,39 @@ class ChatWithDbAutoExecute(BaseChat):
         ):
             local_db_manager = ConnectorManager.get_instance(self.system_app)
             self.database = local_db_manager.get_connector(self.db_name)
+        if self.curr_config.max_num_results <= 0:
+            raise ValueError("max_num_results must be positive")
+        dialect = (self.database.dialect or "").strip().casefold()
+        if dialect != "sqlite":
+            raise ValueError(
+                "Governed chat_with_db_execute currently supports SQLite only; "
+                f"received dialect {dialect or '<empty>'}"
+            )
+        catalog_path = _resolve_catalog_path(self.curr_config.catalog_path)
+        self._catalog = SemanticCatalog.load(catalog_path)
+        self._sql_executor = SafeSqlExecutor(
+            ReadOnlySqlGuard(self._catalog),
+            self.database.run_to_df,
+            dialect,
+            self.curr_config.max_num_results,
+        )
         self.api_call = ApiCall()
 
     @trace()
     async def generate_input_values(self) -> Dict:
-        """
-        generate input values
-        """
-        try:
-            from dbgpt_serve.datasource.service.db_summary_client import DBSummaryClient
-        except ImportError:
-            raise ValueError("Could not import DBSummaryClient. ")
-        user_input = self.current_user_input.last_text
-        client = DBSummaryClient(system_app=self.system_app)
-        try:
-            with root_tracer.start_span("ChatWithDbAutoExecute.get_db_summary"):
-                table_infos = await blocking_func_to_async(
-                    self._executor,
-                    client.get_db_summary,
-                    self.db_name,
-                    user_input,
-                    self.curr_config.schema_retrieve_top_k,
-                )
-        except Exception as e:
-            logger.error(f"Retrieved table info error: {str(e)}")
-            table_infos = await blocking_func_to_async(
-                self._executor, self.database.table_simple_info
-            )
-            if len(table_infos) > self.curr_config.schema_max_tokens:
-                # Load all tables schema, must be less then schema_max_tokens
-                # Here we just truncate the table_infos
-                # TODO: Count the number of tokens by LLMClient
-                table_infos = table_infos[: self.curr_config.schema_max_tokens]
+        """Generate model inputs from the same catalog used for authorization."""
 
         input_values = {
             "db_name": self.db_name,
-            "user_input": user_input,
+            "user_input": self.current_user_input.last_text,
             "top_k": self.curr_config.max_num_results,
             "dialect": self.database.dialect,
-            "table_info": table_infos,
+            "table_info": self._catalog.render_prompt_context(),
             "display_type": self._generate_numbered_list(),
         }
         return input_values
 
     def do_action(self, prompt_response):
-        print(f"do_action:{prompt_response}")
-        return self.database.run_to_df
+        if prompt_response.sql:
+            return self._sql_executor.execute(prompt_response.sql)
+        return None

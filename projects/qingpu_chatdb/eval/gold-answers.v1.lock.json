@@ -1,0 +1,5 @@
+{
+  "schema_version": "qingpu.expected-results-lock.v1",
+  "artifact": "gold-answers.v1.json",
+  "artifact_sha256": "16e5d78812de749d96bb428c58f02b11a63bd776439bd8fb9e27a00f94550d3c"
+}

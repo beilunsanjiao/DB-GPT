@@ -1,0 +1,4 @@
+# Generated local databases and transient evaluation reports are not committed.
+*.db
+*.db-journal
+*/

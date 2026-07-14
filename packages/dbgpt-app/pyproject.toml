@@ -19,6 +19,7 @@ dependencies = [
     "aiofiles",
     "httpx>=0.24.0",
     "pyparsing",
+    "sqlglot>=26.13.2,<27",
 ]
 
 [project.urls]

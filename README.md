@@ -109,6 +109,17 @@ Run code and tools in isolated environments for safer, more reliable analysis.
 - Combine **code, SQL, retrieval, and tools** in a single agentic workflow
 - Build next-generation **AI + Data assistants** for your team or product
 
+## Repository Showcase: Qingpu Trusted ChatDB
+
+This working tree includes a local SQLite trusted-query case built on DB-GPT ChatDB. It adds a domain semantic catalog, AST-level read-only SQL governance, controlled execution, frozen-result evaluation, and a reviewable evidence snapshot. This is a fork/worktree showcase, not a claim that upstream DB-GPT ships the same general-purpose security guarantees.
+
+- [Project guide](projects/qingpu_chatdb/README.md)
+- [Architecture](docs/qingpu-chatdb/architecture.md)
+- [Recruiting brief](docs/qingpu-chatdb/recruiting/project-brief.md)
+- [Acceptance evidence](projects/qingpu_chatdb/evidence/README.md)
+
+The automated acceptance path does not invoke an LLM and currently verifies only SQLite. See the evidence manifest for exact results and boundaries.
+
 ## Product Workflow
 
 ### Explore data

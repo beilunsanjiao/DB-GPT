@@ -32,6 +32,11 @@ name = "chat_with_db_qa"
 schema_retrieve_top_k = 50
 memory = {type="token", max_token_limit=20000}
 
+[[app.configs]]
+name = "chat_with_db_execute"
+catalog_path = "projects/qingpu_chatdb/config/catalog.yaml"
+max_num_results = 50
+
 # Model Configurations
 [models]
 [[models.llms]]

@@ -10,6 +10,7 @@ import sqlparse
 from dbgpt._private.config import Config
 from dbgpt.core.interface.output_parser import BaseOutputParser
 from dbgpt.util.json_utils import serialize
+from dbgpt_app.scene.chat_db.safe_sql import GuardedQueryResult
 
 from ...exceptions import AppActionException
 
@@ -33,6 +34,19 @@ class SqlAction(NamedTuple):
 
 logger = logging.getLogger(__name__)
 
+_DEFAULT_DISPLAY_TYPE = "response_table"
+_ALLOWED_DISPLAY_TYPES = {
+    "response_table",
+    "response_line_chart",
+    "response_pie_chart",
+    "response_scatter_chart",
+    "response_bubble_chart",
+    "response_donut_chart",
+    "response_area_chart",
+    "response_heatmap",
+    "response_vector_chart",
+}
+
 
 class DbChatOutputParser(BaseOutputParser):
     def __init__(self, is_stream_out: bool = False, **kwargs):
@@ -49,31 +63,42 @@ class DbChatOutputParser(BaseOutputParser):
 
     def parse_prompt_response(self, model_out_text):
         clean_str = super().parse_prompt_response(model_out_text)
-        logger.info(f"clean prompt response: {clean_str}")
+        logger.debug("Parsed model response (%d characters)", len(clean_str))
         # Compatible with community pure sql output model
         if self.is_sql_statement(clean_str):
-            return SqlAction(clean_str, "", "", "")
+            return SqlAction(clean_str, {}, _DEFAULT_DISPLAY_TYPE, "")
         else:
             try:
                 response = json.loads(clean_str, strict=False)
                 sql = ""
-                thoughts = dict
-                display = ""
+                thoughts = {}
+                display = _DEFAULT_DISPLAY_TYPE
                 resp = ""
                 for key in sorted(response):
                     if key.strip() == "sql":
                         sql = response[key]
                     if key.strip() == "thoughts":
-                        thoughts = response[key]
+                        thoughts = (
+                            response[key] if isinstance(response[key], dict) else {}
+                        )
                     if key.strip() == "display_type":
                         display = response[key]
                     if key.strip() == "direct_response":
                         resp = response[key]
+                if not isinstance(sql, str):
+                    sql = ""
+                if display not in _ALLOWED_DISPLAY_TYPES:
+                    display = _DEFAULT_DISPLAY_TYPE
+                if not isinstance(resp, str):
+                    resp = str(resp) if resp is not None else ""
                 return SqlAction(
-                    sql=sql, thoughts=thoughts, display=display, direct_response=resp
+                    sql=sql,
+                    thoughts=thoughts,
+                    display=display,
+                    direct_response=resp,
                 )
             except Exception:
-                logger.error(f"json load failed:{clean_str}")
+                logger.exception("Failed to parse model response as JSON")
                 return SqlAction("", clean_str, "", "")
 
     def parse_vector_data_with_pca(self, df):
@@ -135,7 +160,11 @@ class DbChatOutputParser(BaseOutputParser):
                 raise AppActionException("Can not find sql in response", speak)
 
             if prompt_response.sql:
-                df = data(prompt_response.sql)
+                if not isinstance(data, GuardedQueryResult):
+                    raise TypeError(
+                        "SQL results must come from governed ChatDB execution"
+                    )
+                df = data.dataframe
                 param["type"] = prompt_response.display
 
                 if param["type"] == "response_vector_chart":
@@ -144,7 +173,8 @@ class DbChatOutputParser(BaseOutputParser):
                         "response_scatter_chart" if visualizable else "response_table"
                     )
 
-                param["sql"] = prompt_response.sql
+                param["sql"] = data.prepared.sql
+                param["generated_sql"] = data.prepared.original_sql
                 param["data"] = json.loads(
                     df.to_json(orient="records", date_format="iso", date_unit="s")
                 )

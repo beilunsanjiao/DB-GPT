@@ -1,0 +1,166 @@
+{
+  "schema_version": "qingpu.evidence-manifest.v1",
+  "evidence_id": "qingpu-chatdb-2026-07-13-final",
+  "status": "verified_working_tree_snapshot",
+  "verified_at": "2026-07-14",
+  "source_revision": {
+    "kind": "local_committed_branch_with_uncommitted_sanitization",
+    "git_commit": null,
+    "note": "The implementation has local commits, while this regenerated sanitized snapshot includes uncommitted pre-push fixes. Input SHA-256 values bind the evidence to the reviewed files."
+  },
+  "environment": {
+    "os": "Windows 11",
+    "python": "3.11.15",
+    "database": "SQLite local fixture",
+    "llm_invoked": false,
+    "execution": "single-process local evaluation"
+  },
+  "results": {
+    "targeted_tests": {
+      "passed": 98,
+      "failed": 0,
+      "scope": [
+        "projects/qingpu_chatdb/tests",
+        "packages/dbgpt-app/src/dbgpt_app/scene/chat_db/auto_execute/tests"
+      ]
+    },
+    "dataset_lint": {
+      "passed": true,
+      "cases": 50,
+      "catalog_metrics": 15
+    },
+    "gold": {
+      "passed": 50,
+      "total": 50,
+      "answer_cases": 47,
+      "refusal_cases": 3,
+      "p50_ms": 4.85925000248244,
+      "p95_ms": 7.854414994653778,
+      "max_ms": 11.1276999959955
+    },
+    "hardened": {
+      "passed": 25,
+      "total": 25,
+      "blocked_cases": 20,
+      "allowed_cases": 5,
+      "p50_ms": 0.32270001247525215,
+      "p95_ms": 4.225939998286776,
+      "max_ms": 4.277200001524761
+    }
+  },
+  "artifacts": {
+    "expected_results": {
+      "path": "projects/qingpu_chatdb/eval/gold-answers.v1.json",
+      "answer_cases": 47,
+      "sha256": "16e5d78812de749d96bb428c58f02b11a63bd776439bd8fb9e27a00f94550d3c"
+    },
+    "expected_results_lock": {
+      "path": "projects/qingpu_chatdb/eval/gold-answers.v1.lock.json",
+      "sha256": "11fbb7e57bbdcd1de3dd1d973a81a49912a69fa5ded6d48bf7cffba5d191dcc7"
+    },
+    "reports": {
+      "gold": {
+        "original_path": "projects/qingpu_chatdb/data/privacy-gold-reports/gold_20260714T050136280643Z.json",
+        "original_sha256": "f556ce986ce0025529203755e434144a80e306640c5a03fb74bc4f25e664bf97",
+        "published_json": "projects/qingpu_chatdb/evidence/2026-07-13-final/reports/gold.json",
+        "published_json_sha256": "41b614a969796595244a75b43014040d239a28e05137f3fe024690b5d716b3ae",
+        "published_markdown": "projects/qingpu_chatdb/evidence/2026-07-13-final/reports/gold.md",
+        "published_markdown_sha256": "700b24715ba0a30d2a16b63563d17f1b449638ed3898b591b34e9cd2642acdfc",
+        "normalization": [
+          "run.dataset",
+          "run.database",
+          "run.catalog",
+          "run.expected_results"
+        ]
+      },
+      "hardened": {
+        "original_path": "projects/qingpu_chatdb/data/privacy-hardened-reports/hardened_20260714T050140846644Z.json",
+        "original_sha256": "bfd85abfbebb0b7d3008fcf9da0a74c1b29dab29746e5373ef1f47647b6c34f9",
+        "published_json": "projects/qingpu_chatdb/evidence/2026-07-13-final/reports/hardened.json",
+        "published_json_sha256": "d157f730dba01d0961c19a6dc6a05325cc5343c37da445b279709474f134cb51",
+        "published_markdown": "projects/qingpu_chatdb/evidence/2026-07-13-final/reports/hardened.md",
+        "published_markdown_sha256": "fd9f9a4ed85fde097afa211a25587a1162a51f7f9cda898122db4b687cef6f34",
+        "normalization": [
+          "run.dataset",
+          "run.database",
+          "run.catalog",
+          "run.expected_results"
+        ]
+      }
+    }
+  },
+  "inputs": [
+    {
+      "path": "projects/qingpu_chatdb/config/catalog.yaml",
+      "sha256": "7b281727a618c5196c0da5526b5008b6dfeceea65f8b67a4d17ecc2ca9a0f92c"
+    },
+    {
+      "path": "projects/qingpu_chatdb/seed/schema.sql",
+      "sha256": "edebd698186ed3aabf042c3a1b04da1dbd704c464085bd3c7831de22b0c2e462"
+    },
+    {
+      "path": "projects/qingpu_chatdb/scripts/init_local_db.py",
+      "sha256": "2cb783e14eb51466aa25652834eed47df650324abb2547734490a6ef367033d7"
+    },
+    {
+      "path": "projects/qingpu_chatdb/eval/gold.jsonl",
+      "sha256": "7fac64be502151b5178beb9c081f5d84214ba12cbd5f629cb4acb405461d24fb"
+    },
+    {
+      "path": "projects/qingpu_chatdb/eval/hardened.jsonl",
+      "sha256": "e63b5680b8be01c642cc379e72105b199ae24cff7ae993fe73884fef7b63dd3b"
+    },
+    {
+      "path": "projects/qingpu_chatdb/eval/gold-answers.v1.json",
+      "sha256": "16e5d78812de749d96bb428c58f02b11a63bd776439bd8fb9e27a00f94550d3c"
+    },
+    {
+      "path": "projects/qingpu_chatdb/eval/gold-answers.v1.lock.json",
+      "sha256": "11fbb7e57bbdcd1de3dd1d973a81a49912a69fa5ded6d48bf7cffba5d191dcc7"
+    },
+    {
+      "path": "projects/qingpu_chatdb/scripts/run_eval.py",
+      "sha256": "9623db2df774a08a03b995467385732541c1b1463e98c205f11dc3b13bead5cf"
+    },
+    {
+      "path": "projects/qingpu_chatdb/scripts/dataset_lint.py",
+      "sha256": "10115c1551660c507011b782cace13266f0863983cb94db23b9bb9e54912f84a"
+    },
+    {
+      "path": "projects/qingpu_chatdb/scripts/expected_results.py",
+      "sha256": "afe8649fb3b4cfcfb41e3f76758b8e14abca68182f64cac1cbf0d431087e27a5"
+    },
+    {
+      "path": "projects/qingpu_chatdb/scripts/publish_evidence.py",
+      "sha256": "787b9c633a9e6f10fa367792111094e2aba87a66113a268e245888b8ac9154ff"
+    },
+    {
+      "path": "packages/dbgpt-app/src/dbgpt_app/scene/chat_db/safe_sql/guard.py",
+      "sha256": "e16ad93229b45ebc3468998281b1abf1d498629eb3afc34154fd6d8c8601ad15"
+    },
+    {
+      "path": "packages/dbgpt-app/src/dbgpt_app/scene/chat_db/safe_sql/executor.py",
+      "sha256": "b467ee3d905eea14d607e7a790a07cd88708e56dc0f7246137ea9abbbacb41ae"
+    },
+    {
+      "path": "packages/dbgpt-app/src/dbgpt_app/scene/chat_db/semantic_catalog/catalog.py",
+      "sha256": "91bb7f545fafa7b45011c259e6bcbfb802f7ad62627b67e814b155c5a5434fe0"
+    },
+    {
+      "path": "packages/dbgpt-app/src/dbgpt_app/scene/chat_db/auto_execute/chat.py",
+      "sha256": "3064cce5f4b222232672a6e83dec937e0ea74b4b91fd100dabadc8a9954c955d"
+    }
+  ],
+  "verification_commands": [
+    "uv run python projects/qingpu_chatdb/scripts/dataset_lint.py",
+    "uv run pytest -q projects/qingpu_chatdb/tests packages/dbgpt-app/src/dbgpt_app/scene/chat_db/auto_execute/tests",
+    "uv run python projects/qingpu_chatdb/scripts/run_eval.py --mode gold --database <fresh.db> --output-dir <temporary-output>",
+    "uv run python projects/qingpu_chatdb/scripts/run_eval.py --mode hardened --database <fresh.db> --output-dir <temporary-output>"
+  ],
+  "claim_boundaries": [
+    "Gold uses pre-specified candidate SQL/actions and does not measure LLM or Text2SQL accuracy.",
+    "Hardened covers 20 fixed block cases and 5 fixed allow-contract cases; it does not prove resistance to every SQL attack.",
+    "Latency covers fixed local SQLite evaluation paths without LLM, network, concurrency, or production data scale.",
+    "Only the SQLite dialect is implemented and verified."
+  ]
+}

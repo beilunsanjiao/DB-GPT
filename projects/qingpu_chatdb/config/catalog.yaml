@@ -1,0 +1,202 @@
+version: 1
+domain: qingpu_greenhouse
+default_time_range_days: 14
+metadata:
+  source_project: synthetic_greenhouse_fixture
+  authoritative_definition: runtime_sql
+  greenhouse_types:
+    needle: 针叶温室
+    broad: 阔叶温室
+
+tables:
+  - name: green_test.ads_greenhouse_indicator
+    physical_name: ads_greenhouse_indicator
+    layer: ads
+    time_column: dt
+    grain: greenhouse_type_day
+    columns:
+      - {name: dt, type: date, description: 统计日期}
+      - {name: greenhouse_type, type: string, description: 温室类型}
+      - {name: gsi, type: double, description: 环境综合适宜度}
+      - {name: wsi, type: double, description: 水分胁迫指数}
+      - {name: pue, type: double, description: 光合利用效率}
+      - {name: dte, type: double, description: 昼夜温差效率}
+      - {name: efs, type: double, description: 环境波动评分}
+      - {name: cgp, type: double, description: 综合生长潜力}
+  - name: green_test.dws_greenhouse_daily
+    physical_name: dws_greenhouse_daily
+    layer: dws
+    time_column: dt
+    grain: greenhouse_type_day
+    columns:
+      - {name: dt, type: date, description: 统计日期}
+      - {name: greenhouse_type, type: string, description: 温室类型}
+      - {name: avg_air_temp, type: double, description: 日均空气温度}
+      - {name: std_air_temp, type: double, description: 空气温度标准差}
+      - {name: avg_air_humidity, type: double, description: 日均空气湿度}
+      - {name: avg_light, type: double, description: 日均光照强度}
+      - {name: avg_soil_moisture, type: double, description: 日均土壤湿度}
+      - {name: avg_co2, type: double, description: 日均二氧化碳浓度}
+      - {name: avg_par, type: double, description: 日均光合有效辐射}
+      - {name: day_vpd_max, type: double, description: 日间最大VPD}
+      - {name: night_temp_avg, type: double, description: 夜间平均温度}
+      - {name: day_temp_avg, type: double, description: 日间平均温度}
+      - {name: total_dli, type: double, description: 日光积分累计值}
+      - {name: avg_growth_rate, type: double, description: 日均生长速率}
+      - {name: stress_minutes, type: double, description: 水分胁迫累计分钟数}
+      - {name: avg_vpd, type: double, description: 日均VPD}
+      - {name: avg_spad, type: double, description: 日均SPAD叶绿素值}
+
+metrics:
+  - name: gsi
+    display_name: 环境综合适宜度
+    aliases: [综合适宜度, 温室适宜度, 环境适宜指数]
+    table: green_test.ads_greenhouse_indicator
+    column: gsi
+    unit: ratio
+    direction: higher_is_better
+    definition: 温度、湿度、PAR和CO2适宜度的加权综合评分，范围裁剪到0到1
+    definition_source: ads_greenhouse_indicator.sql
+    status: sql_authoritative
+    note: 设计文档中的PAR口径与运行SQL不一致，当前以运行SQL的Sigmoid公式为准
+  - name: wsi
+    display_name: 水分胁迫指数
+    aliases: [水分胁迫, 缺水压力, 胁迫指数]
+    table: green_test.ads_greenhouse_indicator
+    column: wsi
+    unit: ratio
+    direction: lower_is_better
+    definition: 基于VPD和历史土壤湿度区间计算的综合水分胁迫评分
+    definition_source: ads_greenhouse_indicator.sql
+    status: verified
+  - name: pue
+    display_name: 光合利用效率
+    aliases: [光合效率, 光能利用效率]
+    table: green_test.ads_greenhouse_indicator
+    column: pue
+    unit: ratio
+    direction: higher_is_better
+    definition: 生长速率与SPAD相对PAR输入的效率指标
+    definition_source: ads_greenhouse_indicator.sql
+    status: verified
+  - name: dte
+    display_name: 昼夜温差效率
+    aliases: [温差效率, 昼夜温差适配度]
+    table: green_test.ads_greenhouse_indicator
+    column: dte
+    unit: ratio
+    direction: higher_is_better
+    definition: 实际昼夜温差接近品种最优温差的程度，范围0到1
+    definition_source: ads_greenhouse_indicator.sql
+    status: verified
+  - name: efs
+    display_name: 环境波动评分
+    aliases: [环境波动, 温度波动评分, 环境稳定性]
+    table: green_test.ads_greenhouse_indicator
+    column: efs
+    unit: score
+    direction: lower_is_better
+    definition: 基于温度变异程度计算的非负环境波动评分
+    definition_source: ads_greenhouse_indicator.sql
+    status: verified
+  - name: cgp
+    display_name: 综合生长潜力
+    aliases: [生长潜力, 综合生长指数]
+    table: green_test.ads_greenhouse_indicator
+    column: cgp
+    unit: score
+    direction: higher_is_better
+    definition: DLI、生长速率和温度适宜度共同决定的综合生长潜力
+    definition_source: ads_greenhouse_indicator.sql
+    status: semantic_uncertain
+    note: 受total_dli源字段语义影响，正式使用前需确认DLI为瞬时量还是日累计量
+  - name: avg_air_temp
+    display_name: 日均空气温度
+    aliases: [平均温度, 日均温, 棚内均温]
+    table: green_test.dws_greenhouse_daily
+    column: avg_air_temp
+    unit: °C
+    direction: neutral
+    definition: 按日期和温室类型聚合的空气温度平均值
+    definition_source: dws_greenhouse_daily.sql
+    status: verified
+  - name: std_air_temp
+    display_name: 温度标准差
+    aliases: [温度波动, 温度离散程度]
+    table: green_test.dws_greenhouse_daily
+    column: std_air_temp
+    unit: °C
+    direction: lower_is_better
+    definition: 按日期和温室类型计算的空气温度标准差
+    definition_source: dws_greenhouse_daily.sql
+    status: verified
+  - name: avg_air_humidity
+    display_name: 日均空气湿度
+    aliases: [平均湿度, 日均湿度, 空气湿度]
+    table: green_test.dws_greenhouse_daily
+    column: avg_air_humidity
+    unit: '%'
+    direction: neutral
+    definition: 按日期和温室类型聚合的空气相对湿度平均值
+    definition_source: dws_greenhouse_daily.sql
+    status: verified
+  - name: avg_soil_moisture
+    display_name: 日均土壤湿度
+    aliases: [平均土壤湿度, 土壤含水率, 土壤湿度]
+    table: green_test.dws_greenhouse_daily
+    column: avg_soil_moisture
+    unit: '%'
+    direction: neutral
+    definition: 按日期和温室类型聚合的土壤湿度平均值
+    definition_source: dws_greenhouse_daily.sql
+    status: verified
+  - name: avg_co2
+    display_name: 日均二氧化碳浓度
+    aliases: [平均CO2, 二氧化碳浓度, CO2浓度]
+    table: green_test.dws_greenhouse_daily
+    column: avg_co2
+    unit: ppm
+    direction: neutral
+    definition: 按日期和温室类型聚合的二氧化碳浓度平均值
+    definition_source: dws_greenhouse_daily.sql
+    status: verified
+  - name: avg_par
+    display_name: 日均光合有效辐射
+    aliases: [平均PAR, PAR, 光合有效辐射]
+    table: green_test.dws_greenhouse_daily
+    column: avg_par
+    unit: μmol/m²/s
+    direction: neutral
+    definition: 按日期和温室类型聚合的光合有效辐射平均值
+    definition_source: dws_greenhouse_daily.sql
+    status: verified
+  - name: avg_vpd
+    display_name: 日均VPD
+    aliases: [平均VPD, 水汽压亏缺, 饱和水汽压差]
+    table: green_test.dws_greenhouse_daily
+    column: avg_vpd
+    unit: kPa
+    direction: neutral
+    definition: 按日期和温室类型聚合的VPD平均值
+    definition_source: dws_greenhouse_daily.sql
+    status: verified
+  - name: stress_minutes
+    display_name: 水分胁迫时长
+    aliases: [胁迫分钟数, 缺水时长, VPD超标时长]
+    table: green_test.dws_greenhouse_daily
+    column: stress_minutes
+    unit: minute
+    direction: lower_is_better
+    definition: VPD大于1.5kPa的累计分钟数
+    definition_source: dws_greenhouse_daily.sql
+    status: verified
+  - name: avg_growth_rate
+    display_name: 日均生长速率
+    aliases: [平均生长速率, 生长速度, 日生长率]
+    table: green_test.dws_greenhouse_daily
+    column: avg_growth_rate
+    unit: score
+    direction: higher_is_better
+    definition: 按日期和温室类型聚合的生长速率平均值
+    definition_source: dws_greenhouse_daily.sql
+    status: verified

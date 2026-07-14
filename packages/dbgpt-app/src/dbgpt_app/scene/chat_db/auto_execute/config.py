@@ -32,6 +32,14 @@ class ChatWithDBExecuteConfig(GPTsAppCommonConfig):
         default=50,
         metadata={"help": _("The maximum number of results to return from the query.")},
     )
+    catalog_path: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": _(
+                "The semantic catalog YAML path required for governed SQL execution."
+            )
+        },
+    )
     memory: Optional[BaseGPTsAppMemoryConfig] = field(
         default_factory=lambda: BufferWindowGPTsAppMemoryConfig(
             keep_start_rounds=0, keep_end_rounds=10
